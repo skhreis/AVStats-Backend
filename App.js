@@ -1,8 +1,8 @@
 const express = require('express')
-const session = require('express-session')
-const mongoStore = require('connect-mongo')
 const mongoose = require('mongoose')
+const User = require('./models/user')
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
 const app = express()
 require('dotenv').config();
 
@@ -14,12 +14,6 @@ app.use(express.json())
 const connectionStr = process.env.MONGODB_URI
 
 mongoose.connect(process.env.MONGODB_URI)
-// mongoDB success
-mongoose.connection.on('connected', ()=>{console.log('connected')});
-// mongoDB error
-mongoose.connection.on('error',(error)=>{console.log('error')});
-// mongoDB disconnect
-mongoose.connection.on('disconnected',()=>{console.log('disconnected')});
 
 app.post('/register', async (req,res) => {
 	try {
@@ -30,16 +24,20 @@ app.post('/register', async (req,res) => {
 		})
 		res.json({ status: 'ok'})
 	} catch (error) {
-		res.json({ status: 'error', error: 'Duplicate email'})
+		res.json({ status: 'error', error: `${error}`})
 	}
 })
-app.post('/login', async (req,res) => {
+app.get('/login', async (req,res) => {
 		const user = await User.findOne({
 			email: req.body.email,
 			password: req.body.password,
 		})
 		if (user) {
-			return res.json({ status: 'ok', user: true})
+			const token = jwt.sign({
+				name: user.name,
+				email: user.email
+			}, process.env.JWTKEY)
+			return res.json({ status: 'ok', user: token})
 		} else return res.json({ status: 'error', user: false})
 })
 
