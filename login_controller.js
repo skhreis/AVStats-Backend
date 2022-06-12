@@ -1,24 +1,17 @@
-const express = require('express')
-const mongoose = require('mongoose')
+const express = require('express');
+const router = express.Router();
 const User = require('./models/user')
-const cors = require('cors')
 const jwt = require('jsonwebtoken')
-const app = express()
+
 require('dotenv').config();
 
-app.use(cors())
-app.use(express.json())	
-
-const connectionStr = process.env.MONGODB_URI
-
-mongoose.connect(process.env.MONGODB_URI)
-
-app.post('/register', async (req,res) => {
+router.post('/register', async (req,res) => {
 	try {
 		const user = await User.create({
 			name: req.body.name,
 			email: req.body.email,
 			password: req.body.password,
+			favorites: [],
 		})
 		res.json({ status: 'ok'})
 	} catch (error) {
@@ -26,7 +19,7 @@ app.post('/register', async (req,res) => {
 	}
 })
 
-app.get('/name', async (req, res) => {
+router.get('/name', async (req, res) => {
 	const token = req.headers['x-access-token']
 
 	try {
@@ -41,21 +34,17 @@ app.get('/name', async (req, res) => {
 	}
 })
 
-app.post('/login', async (req,res) => {
+router.post('/login', async (req,res) => {
 		const user = await User.findOne({
 			email: req.body.email,
 			password: req.body.password,
 		})
 		if (user) {
 			const token = jwt.sign({
-				name: user.name,
-				email: user.email
+				email: user.email,
 			}, process.env.JWTKEY)
 			return res.json({ status: 'ok', user: token})
 		} else return res.json({ status: 'error', user: false})
 })
 
-
-app.listen(5000, () => {
-	console.log('Server Started')
-})
+module.exports = router;
