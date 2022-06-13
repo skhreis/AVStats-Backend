@@ -33,5 +33,19 @@ router.put('/favorites/airport', async (req,res) => {
 	}
 })
 
+router.delete('/favorites/airport/delete', async (req,res) => {
+	const token = req.headers['x-access-token']
+	try{
+		const decoded = jwt.verify(token, process.env.JWTKEY)
+		const email = decoded.email
+		await User.findOneAndUpdate({email: email}, {$pull: {favorites: req.body.airport }})
+		return res.json({status: 'ok', deleted: req.body.airport})
+	}
+	catch (error) {
+		console.log(error)
+		res.json({status: 'error', error: error, token: token})
+	}
+})
+
 
 module.exports = router

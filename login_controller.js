@@ -26,13 +26,13 @@ router.get('/name', async (req, res) => {
 		const decoded = jwt.verify(token, process.env.JWTKEY)
 		const name = decoded.name
 		const user = await User.findOne({ name: name })
-
 		return res.json({ status: 'ok', name: user.name })
 	} catch (error) {
 		console.log(error)
 		res.json({ status: 'error', error: 'invalid token' })
 	}
 })
+
 
 router.post('/login', async (req,res) => {
 		const user = await User.findOne({
@@ -41,6 +41,7 @@ router.post('/login', async (req,res) => {
 		})
 		if (user) {
 			const token = jwt.sign({
+				name: user.name,
 				email: user.email,
 			}, process.env.JWTKEY)
 			return res.json({ status: 'ok', user: token})
